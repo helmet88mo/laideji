@@ -1,0 +1,226 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  password      String?
+  name          String?
+  image         String?
+  grade         String?
+  province      String?
+  score         Float?
+  subjectCombo  String?
+  targetPath    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  assessments   Assessment[]
+  userRegrets   UserRegret[]
+  guideProgress GuideProgress[]
+  accounts      Account[]
+  sessions      Session[]
+  semesterPlan  SemesterPlan?
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Major {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  name           String
+  degree         String
+  category       String
+  description    String
+  courses        String
+  hardPoints     String
+  abilities      String
+  relatedMajors  String
+  aiRisk         String
+  aiRiskLevel    Int
+  employmentRate Float?
+  matchRate      Float?
+
+  employmentStats  EmploymentStat[]
+  careerPaths      CareerPath[]
+  salaries         Salary[]
+  careerDays       CareerDay[]
+  universityMajors UniversityMajor[]
+  regrets          Regret[]
+}
+
+model University {
+  id          String @id @default(cuid())
+  name        String
+  code        String @unique
+  level       String
+  type        String
+  province    String
+  city        String
+  baoYanRate  Float?
+  description String
+
+  majors UniversityMajor[]
+}
+
+model UniversityMajor {
+  id             String  @id @default(cuid())
+  universityId   String
+  majorId        String
+  admissionScore Float?
+  admissionRank  Int?
+  year           Int
+  subjectReq     String?
+
+  university University @relation(fields: [universityId], references: [id])
+  major      Major      @relation(fields: [majorId], references: [id])
+}
+
+model EmploymentStat {
+  id               String  @id @default(cuid())
+  majorId          String
+  industry         String
+  ratio            Float
+  cityDistribution String?
+
+  major Major @relation(fields: [majorId], references: [id])
+}
+
+model CareerPath {
+  id      String @id @default(cuid())
+  majorId String
+  title   String
+  level   String
+  salary  String
+  skills  String
+
+  major Major @relation(fields: [majorId], references: [id])
+}
+
+model Salary {
+  id       String @id @default(cuid())
+  majorId  String
+  cityTier String
+  year0    Float?
+  year3    Float?
+  year5    Float?
+  year10   Float?
+
+  major Major @relation(fields: [majorId], references: [id])
+}
+
+model CareerDay {
+  id           String  @id @default(cuid())
+  title        String
+  industry     String
+  city         String
+  experience   String
+  education    String
+  timeline     String
+  salary       String
+  expense      String
+  monthlyJoy   String
+  monthlyWorry String
+  adviceToSelf String
+  satisfaction Int
+  majorId      String?
+
+  major Major? @relation(fields: [majorId], references: [id])
+}
+
+model Regret {
+  id       String  @id @default(cuid())
+  grade    String
+  category String
+  content  String
+  tags     String
+  isLate   Boolean
+  remedy   String?
+  majorId  String?
+
+  major     Major?       @relation(fields: [majorId], references: [id])
+  userSaves UserRegret[]
+}
+
+model UserRegret {
+  id       String   @id @default(cuid())
+  userId   String
+  regretId String
+  markedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  regret Regret @relation(fields: [regretId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, regretId])
+}
+
+model GuideProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  phase       String
+  taskId      String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Assessment {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  result    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SemesterPlan {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  planData  String   @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
