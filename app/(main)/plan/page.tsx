@@ -1,6 +1,6 @@
 "use client"
 
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/client-auth"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,7 +22,7 @@ interface PlanApiData {
 }
 
 export default function PlanPage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
 
   // 从 API 获取用户计划数据
@@ -33,7 +33,7 @@ export default function PlanPage() {
       if (!res.ok) throw new Error("加载失败")
       return res.json() as Promise<PlanApiData>
     },
-    enabled: !!session,
+    enabled: !!user,
   })
 
   // 从 API 获取轨道数据（不再从 bundle 导入）
@@ -44,7 +44,7 @@ export default function PlanPage() {
       if (!res.ok) throw new Error("加载轨道数据失败")
       return res.json() as Promise<{ tracks: TrackPlan[] }>
     },
-    enabled: !!session,
+    enabled: !!user,
     staleTime: Infinity, // 轨道数据是静态的
   })
 
@@ -63,7 +63,7 @@ export default function PlanPage() {
     onError: (err: Error) => toast.error(err.message || "保存失败，请重试"),
   })
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-md text-center">
         <h1 className="text-2xl font-bold mb-2">请先登录</h1>

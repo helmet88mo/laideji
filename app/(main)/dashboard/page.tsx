@@ -1,6 +1,6 @@
 "use client"
 
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/client-auth"
 import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +12,7 @@ import { BookOpen, Briefcase, Heart, Compass, Sparkles, ArrowRight, Calendar, Ta
 import type { PlanProgressData, TrackPlan } from "@/types"
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
 
   // 从 API 获取用户计划数据
   const { data: planInfo, isLoading: planLoading, isError: planError, refetch: refetchPlan } = useQuery({
@@ -26,7 +26,7 @@ export default function DashboardPage() {
         grade: string | null
       }>
     },
-    enabled: !!session,
+    enabled: !!user,
   })
 
   // 从 API 获取轨道数据
@@ -37,11 +37,11 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("加载轨道数据失败")
       return res.json() as Promise<{ tracks: TrackPlan[] }>
     },
-    enabled: !!session,
+    enabled: !!user,
     staleTime: Infinity,
   })
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-md text-center">
         <h1 className="text-2xl font-bold mb-2">请先登录</h1>
@@ -89,7 +89,7 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">你好，{session.user?.name || "同学"}</h1>
+        <h1 className="text-3xl font-bold mb-2">你好，{user?.name || "同学"}</h1>
         <p className="text-muted-foreground">欢迎回来。</p>
       </div>
 

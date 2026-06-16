@@ -1,6 +1,6 @@
 "use client"
 
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/client-auth"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +14,7 @@ import { GRADES, TARGET_PATHS, PROVINCES } from "@/lib/constants"
 import { toast } from "sonner"
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
 
   const { data: profile, isLoading } = useQuery({
@@ -24,7 +24,7 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error("加载失败")
       return res.json() as Promise<{ targetPath: string | null; grade: string | null; province: string | null }>
     },
-    enabled: !!session,
+    enabled: !!user,
   })
 
   const [grade, setGrade] = useState("")
@@ -56,7 +56,7 @@ export default function ProfilePage() {
     saveMutation.mutate({ grade, province, targetPath })
   }
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-md text-center">
         <h1 className="text-2xl font-bold mb-2">请先登录</h1>
@@ -74,12 +74,12 @@ export default function ProfilePage() {
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
               <AvatarFallback className="text-xl">
-                {(session.user?.name || "U").charAt(0).toUpperCase()}
+                {(user?.name || "U").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle>{session.user?.name || "同学"}</CardTitle>
-              <CardDescription>{session.user?.email}</CardDescription>
+              <CardTitle>{user?.name || "同学"}</CardTitle>
+              <CardDescription>{user?.email}</CardDescription>
             </div>
           </div>
         </CardHeader>

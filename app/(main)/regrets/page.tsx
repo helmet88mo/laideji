@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/client-auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,7 @@ import { REGRET_CATEGORIES, REGRET_GRADES } from "@/lib/constants"
 import type { RegretItem } from "@/types"
 
 export default function RegretsPage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
   const [grade, setGrade] = useState("")
   const [category, setCategory] = useState("")
@@ -111,7 +111,7 @@ export default function RegretsPage() {
                       ))}
                     </div>
                   </div>
-                  {session && (
+                  {user && (
                     <Button
                       variant={regret.saved ? "default" : "outline"}
                       size="icon"

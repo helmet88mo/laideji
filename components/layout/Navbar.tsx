@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useSession, signOut } from "next-auth/react"
+import { useAuth } from "@/lib/client-auth"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -28,7 +28,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { data: session } = useSession()
+  const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
 
   return (
@@ -54,17 +54,17 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {session?.user ? (
+          {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="text-sm">
-                    {(session.user.name || "U").charAt(0).toUpperCase()}
+                    {(user.name || "U").charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <div className="px-2 py-1.5 text-sm font-medium">{session.user.name || session.user.email}</div>
+                <div className="px-2 py-1.5 text-sm font-medium">{user.name || user.email}</div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push("/dashboard")}>
                   个人仪表盘
@@ -73,7 +73,7 @@ export function Navbar() {
                   我的档案
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>退出登录</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => logout()}>退出登录</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

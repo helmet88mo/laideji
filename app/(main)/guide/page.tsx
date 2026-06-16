@@ -1,6 +1,6 @@
 "use client"
 
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/client-auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ const PHASE_ICONS: Record<string, React.ElementType> = {
 }
 
 export default function GuidePage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -69,7 +69,7 @@ export default function GuidePage() {
         ))}
       </div>
 
-      {!session && (
+      {!user && (
         <Card className="mt-6 bg-primary/5 border-primary/20">
           <CardContent className="py-6 text-center">
             <p className="mb-3 text-muted-foreground">登录后可以追踪你的引导进度</p>
