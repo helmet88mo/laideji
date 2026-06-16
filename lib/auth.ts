@@ -1,12 +1,13 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 
-// MVP 内置账号（生产环境应使用数据库）
+// MVP 内置账号
 const BUILTIN_USERS = [
-  { id: "demo-user", email: "demo@laideji.com", password: "Demo1234", name: "小明" },
+  { id: "1", email: "demo@laideji.com", password: "Demo1234", name: "小明" },
 ]
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET || "laideji-fallback-dev-only-key-2026",
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [
@@ -28,8 +29,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.sub = user.id
+      return token
+    },
     async session({ session, token }) {
-      if (session.user && token.sub) session.user.id = token.sub
+      if (session.user) session.user.id = token.sub || ""
       return session
     },
   },
