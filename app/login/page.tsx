@@ -7,18 +7,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle } from "lucide-react"
 import { useAuth } from "@/lib/client-auth"
 
 export default function LoginPage() {
   const router = useRouter()
   const { login, user } = useAuth()
+  const [tab, setTab] = useState("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
 
   if (user) {
     router.push("/dashboard")
@@ -38,36 +41,80 @@ export default function LoginPage() {
     }
   }
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setSuccess("")
+    if (password.length < 6) { setError("密码长度至少 6 位"); return }
+    setLoading(true)
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, name }),
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (res.ok) {
+      setSuccess("注册成功！切换到登录标签登录吧")
+      setEmail("")
+      setPassword("")
+      setName("")
+    } else {
+      setError(data.error || "注册失败")
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-16 max-w-md">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">登录</CardTitle>
-          <CardDescription>登录后可以保存收藏、追踪规划进度</CardDescription>
+          <CardTitle className="text-2xl">欢迎使用 来得及</CardTitle>
+          <CardDescription>登录或注册，开始你的学业生涯规划</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">邮箱</Label>
-              <Input id="email" type="email" placeholder="demo@laideji.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
-              <Input id="password" type="password" placeholder="Demo1234" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "登录中..." : "登录"}
-            </Button>
-          </form>
-          <Separator />
-          <p className="text-center text-sm text-muted-foreground">
-            演示账号：demo@laideji.com / Demo1234
+        <CardContent>
+          <Tabs value={tab} onValueChange={(v) => { setTab(v); setError(""); setSuccess("") }} className="space-y-4">
+            <TabsList className="w-full">
+              <TabsTrigger value="login" className="flex-1">登录</TabsTrigger>
+              <TabsTrigger value="register" className="flex-1">注册</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              {error && <Alert variant="destructive" className="mb-3"><AlertCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>}
+              <form onSubmit={handleLogin} className="space-y-3">
+                <div className="space-y-1">
+                  <Label>邮箱</Label>
+                  <Input type="email" placeholder="demo@laideji.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-1">
+                  <Label>密码</Label>
+                  <Input type="password" placeholder="Demo1234" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>{loading ? "登录中..." : "登录"}</Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="register">
+              {error && <Alert variant="destructive" className="mb-3"><AlertCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>}
+              {success && <Alert className="mb-3 border-green-400 bg-green-50"><CheckCircle className="h-4 w-4 text-green-600" /><AlertDescription className="text-green-700">{success}</AlertDescription></Alert>}
+              <form onSubmit={handleRegister} className="space-y-3">
+                <div className="space-y-1">
+                  <Label>昵称（选填）</Label>
+                  <Input placeholder="你的昵称" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label>邮箱</Label>
+                  <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-1">
+                  <Label>密码</Label>
+                  <Input type="password" placeholder="至少6位" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>{loading ? "注册中..." : "注册"}</Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            演示账号 demo@laideji.com / Demo1234
           </p>
         </CardContent>
       </Card>
