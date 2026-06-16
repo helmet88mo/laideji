@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { apiError } from "@/lib/api-utils"
+import DATA from "@/lib/server-data"
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,18 +7,12 @@ export async function GET(req: NextRequest) {
     const industry = searchParams.get("industry")
     const majorId = searchParams.get("majorId")
 
-    const where: Record<string, unknown> = {}
-    if (industry) where.industry = industry
-    if (majorId) where.majorId = majorId
-
-    const data = await db.careerDay.findMany({
-      where,
-      orderBy: { satisfaction: "desc" },
-      include: { major: { select: { name: true, category: true } } },
-    })
+    let data = [...DATA.careers]
+    if (industry) data = data.filter((c: Record<string,unknown>) => c.industry === industry)
+    if (majorId) data = data.filter((c: Record<string,unknown>) => c.majorId === majorId)
 
     return NextResponse.json({ data, total: data.length })
-  } catch (error) {
-    return apiError(error)
+  } catch {
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

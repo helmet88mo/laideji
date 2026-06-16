@@ -1,24 +1,13 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { apiError } from "@/lib/api-utils"
+import { getUniversityById } from "@/lib/server-data"
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const university = await db.university.findUnique({
-      where: { id },
-      include: {
-        majors: {
-          include: { major: true },
-        },
-        _count: { select: { majors: true } },
-      },
-    })
-
-    if (!university) return NextResponse.json({ error: "Not found" }, { status: 404 })
-
-    return NextResponse.json(university)
-  } catch (error) {
-    return apiError(error)
+    const uni = getUniversityById(id)
+    if (!uni) return NextResponse.json({ error: "Not found" }, { status: 404 })
+    return NextResponse.json(uni)
+  } catch {
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

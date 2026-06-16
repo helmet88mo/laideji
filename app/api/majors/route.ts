@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { apiError } from "@/lib/api-utils"
+import DATA from "@/lib/server-data"
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,32 +7,20 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category")
     const search = searchParams.get("search")
     const page = parseInt(searchParams.get("page") || "1")
-    const pageSize = parseInt(searchParams.get("pageSize") || "20")
+    const pageSize = Math.min(parseInt(searchParams.get("pageSize") || "20"), 100)
 
-    const where: Record<string, unknown> = {}
-    if (category) where.category = category
+    let data = [...DATA.majors]
+    if (category && category !== "all") data = data.filter((m) => m.category === category)
     if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { description: { contains: search } },
-      ]
+      const q = search.toLowerCase()
+      data = data.filter((m) => String(m.name).toLowerCase().includes(q) || String(m.description).toLowerCase().includes(q))
     }
 
-    const [data, total] = await Promise.all([
-      db.major.findMany({
-        where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        orderBy: { code: "asc" },
-        include: {
-          _count: { select: { careerDays: true } },
-        },
-      }),
-      db.major.count({ where }),
-    ])
+    const total = data.length
+    const paged = data.slice((page - 1) * pageSize, page * pageSize)
 
-    return NextResponse.json({ data, total, page, pageSize })
+    return NextResponse.json({ data: paged, total, page, pageSize })
   } catch (error) {
-    return apiError(error)
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

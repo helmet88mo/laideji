@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { apiError } from "@/lib/api-utils"
+import DATA from "@/lib/server-data"
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,23 +7,14 @@ export async function GET(req: NextRequest) {
     const level = searchParams.get("level")
     const type = searchParams.get("type")
     const province = searchParams.get("province")
-    const search = searchParams.get("search")
 
-    const where: Record<string, unknown> = {}
-    if (level) where.level = level
-    if (type) where.type = type
-    if (province) where.province = province
-    if (search) {
-      where.OR = [{ name: { contains: search } }, { city: { contains: search } }]
-    }
-
-    const data = await db.university.findMany({
-      where,
-      orderBy: { name: "asc" },
-    })
+    let data = [...DATA.universities]
+    if (level && level !== "all") data = data.filter((u) => u.level === level)
+    if (type && type !== "all") data = data.filter((u) => u.type === type)
+    if (province && province !== "all") data = data.filter((u) => u.province === province)
 
     return NextResponse.json({ data, total: data.length })
-  } catch (error) {
-    return apiError(error)
+  } catch {
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

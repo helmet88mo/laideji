@@ -1,40 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { auth } from "@/lib/auth"
-import { apiError, parseRequestBody } from "@/lib/api-utils"
+
+// MVP 阶段使用 sessionStorage + 内存存储
+const saves = new Map<string, Set<string>>()
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-    const body = await parseRequestBody<{ regretId: string }>(req)
-    if (!body?.regretId) return NextResponse.json({ error: "缺少 regretId" }, { status: 400 })
-
-    await db.userRegret.upsert({
-      where: { userId_regretId: { userId: session.user.id, regretId: body.regretId } },
-      create: { userId: session.user.id, regretId: body.regretId },
-      update: {},
-    })
+    const { regretId } = await req.json().catch(() => ({}))
+    if (!regretId) return NextResponse.json({ error: "Missing regretId" }, { status: 400 })
+    const key = "demo-user"
+    if (!saves.has(key)) saves.set(key, new Set())
+    saves.get(key)!.add(regretId)
     return NextResponse.json({ saved: true })
-  } catch (error) {
-    return apiError(error)
+  } catch {
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-    const body = await parseRequestBody<{ regretId: string }>(req)
-    if (!body?.regretId) return NextResponse.json({ error: "缺少 regretId" }, { status: 400 })
-
-    await db.userRegret.deleteMany({
-      where: { userId: session.user.id, regretId: body.regretId },
-    })
+    const { regretId } = await req.json().catch(() => ({}))
+    if (!regretId) return NextResponse.json({ error: "Missing regretId" }, { status: 400 })
+    saves.get("demo-user")?.delete(regretId)
     return NextResponse.json({ saved: false })
-  } catch (error) {
-    return apiError(error)
+  } catch {
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }
