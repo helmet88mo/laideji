@@ -1,5 +1,7 @@
 [build]
-  command = "npx prisma generate && npm run build"
+  command = "npx prisma generate && npx prisma db push --accept-data-loss && npx tsx prisma/seed.ts && npm run build && cp /tmp/dev.db .next/dev.db"
   publish = ".next"
+
 [build.environment]
   NODE_VERSION = "20"
+  DATABASE_URL = "file:/tmp/dev.db"
