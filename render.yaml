@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: laideji
+    runtime: node
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx next start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: AUTH_SECRET
+        value: laideji-prod-2026-secure-key-change-me
